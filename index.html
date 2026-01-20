@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hostel Expense App</title>
+<link rel="manifest" href="manifest.json">
+<style>
+body{font-family:Arial, sans-serif; padding:10px}
+table{width:100%; border-collapse:collapse}
+th,td{border:1px solid #ccc; padding:6px; text-align:center}
+.green{color:green}
+.red{color:red}
+button{margin:4px}
+</style>
+</head>
+<body>
+<h2>Hostel Expense Manager</h2>
+
+<h3>Members</h3>
+<input id="memberName" placeholder="Member name">
+<button onclick="addMember()">Add</button>
+<ul id="members"></ul>
+
+<h3>Add Entry</h3>
+<select id="type">
+  <option value="expense">Expense</option>
+  <option value="collection">Collection</option>
+</select>
+<input id="amount" type="number" placeholder="Amount">
+<button onclick="addEntry()">Add</button>
+
+<h3>Records</h3>
+<table>
+<thead><tr><th>Type</th><th>Amount</th></tr></thead>
+<tbody id="records"></tbody>
+</table>
+
+<script>
+let data = JSON.parse(localStorage.getItem("data")) || {members:[], records:[]};
+
+function save(){ localStorage.setItem("data", JSON.stringify(data)); render(); }
+
+function addMember(){
+  let n=document.getElementById("memberName").value;
+  if(!n) return;
+  data.members.push(n);
+  document.getElementById("memberName").value="";
+  save();
+}
+
+function addEntry(){
+  let amt=document.getElementById("amount").value;
+  let type=document.getElementById("type").value;
+  if(!amt) return;
+  data.records.push({type, amt});
+  document.getElementById("amount").value="";
+  save();
+}
+
+function render(){
+  let m=document.getElementById("members");
+  m.innerHTML="";
+  data.members.forEach(x=>m.innerHTML+=`<li>${x}</li>`);
+
+  let r=document.getElementById("records");
+  r.innerHTML="";
+  data.records.forEach(x=>{
+    r.innerHTML+=`<tr><td class="${x.type=='expense'?'red':'green'}">${x.type}</td><td>${x.amt}</td></tr>`;
+  });
+}
+render();
+</script>
+</body>
+</html>
