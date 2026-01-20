@@ -9,12 +9,14 @@
 body{font-family:Arial, sans-serif; padding:10px}
 table{width:100%; border-collapse:collapse}
 th,td{border:1px solid #ccc; padding:6px; text-align:center}
-.green{color:green}
-.red{color:red}
+.green{color:green; font-weight:bold}
+.red{color:red; font-weight:bold}
 button{margin:4px}
+input,select{margin:4px}
 </style>
 </head>
 <body>
+
 <h2>Hostel Expense Manager</h2>
 
 <h3>Members</h3>
@@ -28,18 +30,29 @@ button{margin:4px}
   <option value="collection">Collection</option>
 </select>
 <input id="amount" type="number" placeholder="Amount">
+<input id="desc" placeholder="Description (e.g. Rice, Electricity)">
 <button onclick="addEntry()">Add</button>
 
 <h3>Records</h3>
 <table>
-<thead><tr><th>Type</th><th>Amount</th></tr></thead>
+<thead>
+<tr>
+<th>Date</th>
+<th>Type</th>
+<th>Amount</th>
+<th>Description</th>
+</tr>
+</thead>
 <tbody id="records"></tbody>
 </table>
 
 <script>
 let data = JSON.parse(localStorage.getItem("data")) || {members:[], records:[]};
 
-function save(){ localStorage.setItem("data", JSON.stringify(data)); render(); }
+function save(){
+  localStorage.setItem("data", JSON.stringify(data));
+  render();
+}
 
 function addMember(){
   let n=document.getElementById("memberName").value;
@@ -52,9 +65,20 @@ function addMember(){
 function addEntry(){
   let amt=document.getElementById("amount").value;
   let type=document.getElementById("type").value;
+  let desc=document.getElementById("desc").value;
   if(!amt) return;
-  data.records.push({type, amt});
+
+  let date = new Date().toLocaleString();
+
+  data.records.push({
+    type:type,
+    amt:amt,
+    desc:desc || "-",
+    date:date
+  });
+
   document.getElementById("amount").value="";
+  document.getElementById("desc").value="";
   save();
 }
 
@@ -66,10 +90,17 @@ function render(){
   let r=document.getElementById("records");
   r.innerHTML="";
   data.records.forEach(x=>{
-    r.innerHTML+=`<tr><td class="${x.type=='expense'?'red':'green'}">${x.type}</td><td>${x.amt}</td></tr>`;
+    r.innerHTML+=`
+    <tr>
+      <td>${x.date}</td>
+      <td class="${x.type=='expense'?'red':'green'}">${x.type}</td>
+      <td>${x.amt}</td>
+      <td>${x.desc}</td>
+    </tr>`;
   });
 }
 render();
 </script>
+
 </body>
 </html>
