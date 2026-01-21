@@ -9,54 +9,41 @@
 body{font-family:Arial, sans-serif; padding:10px}
 table{width:100%; border-collapse:collapse}
 th,td{border:1px solid #ccc; padding:6px; text-align:center}
-.green{color:green; font-weight:bold}
-.red{color:red; font-weight:bold}
+.green{color:green}
+.red{color:red}
 button{margin:4px}
 input,select{margin:4px}
-.box{border:1px solid #ddd; padding:8px; margin-bottom:10px}
 </style>
 </head>
 <body>
-
 <h2>Hostel Expense Manager</h2>
 
-<div class="box">
 <h3>Members</h3>
 <input id="memberName" placeholder="Member name">
 <button onclick="addMember()">Add</button>
 <ul id="members"></ul>
-</div>
 
-<div class="box">
 <h3>Add Entry</h3>
 <select id="type">
   <option value="expense">Expense</option>
   <option value="collection">Collection</option>
 </select>
 <input id="amount" type="number" placeholder="Amount">
-<input id="desc" placeholder="Description (e.g. Rice, Electricity)">
-
-<h4>Who was included?</h4>
-<div id="memberChecks"></div>
-
+<input id="desc" placeholder="Description">
 <button onclick="addEntry()">Add</button>
-</div>
 
-<div class="box">
 <h3>Records</h3>
 <table>
 <thead>
 <tr>
 <th>Date</th>
 <th>Type</th>
-<th>Amount</th>
 <th>Description</th>
-<th>Included Members</th>
+<th>Amount</th>
 </tr>
 </thead>
 <tbody id="records"></tbody>
 </table>
-</div>
 
 <script>
 let data = JSON.parse(localStorage.getItem("data")) || {members:[], records:[]};
@@ -80,19 +67,13 @@ function addEntry(){
   let desc=document.getElementById("desc").value;
   if(!amt) return;
 
-  let included=[];
-  document.querySelectorAll(".memcheck").forEach(c=>{
-    if(c.checked) included.push(c.value);
-  });
-
-  let date = new Date().toLocaleString();
+  let today = new Date().toLocaleDateString();
 
   data.records.push({
     type:type,
     amt:amt,
-    desc:desc || "-",
-    date:date,
-    included:included
+    desc:desc,
+    date:today
   });
 
   document.getElementById("amount").value="";
@@ -105,27 +86,18 @@ function render(){
   m.innerHTML="";
   data.members.forEach(x=>m.innerHTML+=`<li>${x}</li>`);
 
-  let checks=document.getElementById("memberChecks");
-  checks.innerHTML="";
-  data.members.forEach(x=>{
-    checks.innerHTML+=`<label><input type="checkbox" class="memcheck" value="${x}" checked> ${x}</label><br>`;
-  });
-
   let r=document.getElementById("records");
   r.innerHTML="";
   data.records.forEach(x=>{
-    r.innerHTML+=`
-    <tr>
-      <td>${x.date}</td>
+    r.innerHTML+=`<tr>
+      <td>${x.date || ""}</td>
       <td class="${x.type=='expense'?'red':'green'}">${x.type}</td>
+      <td>${x.desc || ""}</td>
       <td>${x.amt}</td>
-      <td>${x.desc}</td>
-      <td>${x.included.join(", ")}</td>
     </tr>`;
   });
 }
 render();
 </script>
-
 </body>
 </html>
