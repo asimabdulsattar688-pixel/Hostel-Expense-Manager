@@ -3,99 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hostel Expense App</title>
+<title>Hostel Expense Manager</title>
 <link rel="manifest" href="manifest.json">
 <style>
-body{font-family:Arial, sans-serif; padding:10px}
-table{width:100%; border-collapse:collapse}
-th,td{border:1px solid #ccc; padding:6px; text-align:center}
-.green{color:green}
-.red{color:red}
-button{margin:4px}
-input,select{margin:4px}
+body{font-family:Arial;padding:10px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #aaa;padding:6px;text-align:center}
+.green{color:green;font-weight:bold}
+.red{color:red;font-weight:bold}
+button{margin:2px}
 </style>
 </head>
 <body>
+
 <h2>Hostel Expense Manager</h2>
 
 <h3>Members</h3>
 <input id="memberName" placeholder="Member name">
 <button onclick="addMember()">Add</button>
-<ul id="members"></ul>
+<ul id="memberList"></ul>
 
 <h3>Add Entry</h3>
-<select id="type">
-  <option value="expense">Expense</option>
-  <option value="collection">Collection</option>
-</select>
+<input id="desc" placeholder="Description"><br><br>
 <input id="amount" type="number" placeholder="Amount">
-<input id="desc" placeholder="Description">
-<button onclick="addEntry()">Add</button>
+<select id="type">
+<option value="collection">Collection</option>
+<option value="expense">Expense</option>
+</select>
+
+<h4>Included Members</h4>
+<div id="memberChecks"></div>
+<button onclick="addEntry()">Add Entry</button>
 
 <h3>Records</h3>
 <table>
 <thead>
 <tr>
-<th>Date</th>
-<th>Type</th>
-<th>Description</th>
-<th>Amount</th>
+<th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Members</th><th>Edit</th>
 </tr>
 </thead>
 <tbody id="records"></tbody>
 </table>
 
+<h3>Balance</h3>
+<div id="balance"></div>
+
 <script>
-let data = JSON.parse(localStorage.getItem("data")) || {members:[], records:[]};
+let members = JSON.parse(localStorage.getItem("members")||"[]");
+let records = JSON.parse(localStorage.getItem("records")||"[]");
 
 function save(){
-  localStorage.setItem("data", JSON.stringify(data));
-  render();
+localStorage.setItem("members",JSON.stringify(members));
+localStorage.setItem("records",JSON.stringify(records));
 }
 
 function addMember(){
-  let n=document.getElementById("memberName").value;
-  if(!n) return;
-  data.members.push(n);
-  document.getElementById("memberName").value="";
-  save();
+let m=document.getElementById("memberName").value.trim();
+if(!m)return;
+members.push(m);
+document.getElementById("memberName").value="";
+save();render();
 }
 
 function addEntry(){
-  let amt=document.getElementById("amount").value;
-  let type=document.getElementById("type").value;
-  let desc=document.getElementById("desc").value;
-  if(!amt) return;
+let amt=document.getElementById("amount").value;
+if(!amt)return;
+let included=[...document.querySelectorAll("#memberChecks input:checked")].map(i=>i.value);
+if(included.length==0)return alert("Select members");
 
-  let today = new Date().toLocaleDateString();
+records.push({
+date:new Date().toLocaleString(),
+desc:document.getElementById("desc").value || "-",
+type:document.getElementById("type").value,
+amount:Number(amt),
+members:included
+});
+document.getElementById("amount").value="";
+document.getElementById("desc").value="";
+save();render();
+}
 
-  data.records.push({
-    type:type,
-    amt:amt,
-    desc:desc,
-    date:today
-  });
-
-  document.getElementById("amount").value="";
-  document.getElementById("desc").value="";
-  save();
+function editEntry(i){
+let r=records[i];
+let nAmt=prompt("Edit amount",r.amount);
+if(nAmt===null)return;
+let nDesc=prompt("Edit description",r.desc);
+records[i].amount=Number(nAmt);
+records[i].desc=nDesc||"-";
+save();render();
 }
 
 function render(){
-  let m=document.getElementById("members");
-  m.innerHTML="";
-  data.members.forEach(x=>m.innerHTML+=`<li>${x}</li>`);
+document.getElementById("memberList").innerHTML=members.map(m=>`<li>${m}</li>`).join("");
+document.getElementById("memberChecks").innerHTML=members.map(m=>
+`<label><input type="checkbox" value="${m}" checked> ${m}</label><br>`).join("");
 
-  let r=document.getElementById("records");
-  r.innerHTML="";
-  data.records.forEach(x=>{
-    r.innerHTML+=`<tr>
-      <td>${x.date || ""}</td>
-      <td class="${x.type=='expense'?'red':'green'}">${x.type}</td>
-      <td>${x.desc || ""}</td>
-      <td>${x.amt}</td>
-    </tr>`;
-  });
+let tb="";
+records.forEach((r,i)=>{
+tb+=`
+<tr>
+<td>${r.date}</td>
+<td>${r.desc}</td>
+<td class="${r.type=='collection'?'green':'red'}">${r.type}</td>
+<td>${r.amount}</td>
+<td>${r.members.join(", ")}</td>
+<td><button onclick="editEntry(${i})">Edit</button></td>
+</tr>`;
+});
+document.getElementById("records").innerHTML=tb;
+
+let bal={};
+members.forEach(m=>bal[m]=0);
+records.forEach(r=>{
+let share=r.amount/r.members.length;
+r.members.forEach(m=>bal[m]+=r.type=="collection"?share:-share);
+});
+document.getElementById("balance").innerHTML=Object.keys(bal)
+.map(m=>`${m}: ${bal[m].toFixed(2)}`).join("<br>");
 }
 render();
 </script>
